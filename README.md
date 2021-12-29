@@ -1,32 +1,65 @@
 # What is this?
 
-A template for python packages
-
-# How do I fill out this template?
-
-1. Change the `pyproject.toml` file (package name, version, etc)
-2. Change the `./main/your_package_name` folder
-3. Edit the `./main/your_package_name/__init__.py` file, and change the `from your_package_name.main import *`
-4. Open the `./main/setup.py` and edit the `install_requires=` part to include dependencies
-5. Edit this readme (it will be the front page of the package)
-6. Edit the `./main/your_package_name/main.py` to have your library in it
-7. Run `project local_install` to install what you just made
-8. Run `project publish` to release your package
+Make 3rd-party functions capable of hanlding new inputs
 
 
-## (Readme template below)
+# Examples
 
-# What is this?
-
-(Your answer here)
-
-# How do I use this?
-
-`pip install your_package_name`
+`pip install slick-siphon`
 
 
 ```python
-from your_package_name import something
+from slick_siphon import siphon
+import torch
 
-# example of how to use your package here
+# a function you might want to extend
+def to_torch_tensor(a_list):
+    print("this is the non-siphoned part")
+    return torch.tensor(a_list)
+
+# an new data type which that^ function should handle
+class MyCustomContainerStackQueWhatever:
+    def __init__(self, list_items):
+        self.list_items = list_items
+        self.other_data = "blah blah blah"
+
+# wrap to_torch_tensor with a siphon!
+# -> when the lambda returns true
+# -> the function below is run INSTEAD of the original to_torch_tensor()
+@siphon(when=( lambda a_list: isinstance(a_list, MyCustomContainerStackQueWhatever) ), is_true_for=to_torch_tensor)
+def name_of_this_func_doesnt_matter(a_list): # then siphon redirects it to this custom handler
+    actually_a_custom_container = a_list
+    print("this is the siphoned case!")
+    return torch.tensor(actually_a_custom_container.list_items)
+    
+
+# 
+# usage!
+# 
+to_torch_tensor(MyCustomContainerStackQueWhatever([1,2,3]))
+# >>> "this is the siphoned case!"
+# >>> torch.tensor([1,2,3])
+to_torch_tensor([1,2,3])
+# >>> "this is the non-siphoned part"
+# >>> torch.tensor([1,2,3])
+
+
+# extend it again, so it'll accept None as an input (not recommended but its an example)
+@siphon(when=( lambda a_list: isinstance(a_list, type(None)) ), is_true_for=to_torch_tensor)
+def name_of_this_func_doesnt_matter(a_list):
+    return torch.tensor([])
+
+
+# 
+# usage!
+# 
+to_torch_tensor(None)
+# >>> torch.tensor([])
+to_torch_tensor(MyCustomContainerStackQueWhatever([1,2,3]))
+# >>> "this is the siphoned case!"
+# >>> torch.tensor([1,2,3])
+to_torch_tensor([1,2,3])
+# >>> "this is the non-siphoned part"
+# >>> torch.tensor([1,2,3])
+
 ```
