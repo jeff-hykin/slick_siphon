@@ -26,8 +26,11 @@ class MyCustomContainerStackQueWhatever:
 # wrap to_torch_tensor with a siphon!
 # -> when the lambda returns true
 # -> the function below is run INSTEAD of the original to_torch_tensor()
-@siphon(when=( lambda a_list: isinstance(a_list, MyCustomContainerStackQueWhatever) ), is_true_for=to_torch_tensor)
-def name_of_this_func_doesnt_matter(a_list): # then siphon redirects it to this custom handler
+@siphon(
+    when=lambda a_list: isinstance(a_list, MyCustomContainerStackQueWhatever),
+    is_true_for=to_torch_tensor
+)
+def custom_handler__name_of_this_func_doesnt_matter(a_list): # the siphon redirects args to <- this custom handler
     actually_a_custom_container = a_list
     print("this is the siphoned case!")
     return torch.tensor(actually_a_custom_container.list_items)
@@ -45,8 +48,8 @@ to_torch_tensor([1,2,3])
 
 
 # extend it again, so it'll accept None as an input (not recommended but its an example)
-@siphon(when=( lambda a_list: isinstance(a_list, type(None)) ), is_true_for=to_torch_tensor)
-def name_of_this_func_doesnt_matter(a_list):
+@siphon(when=( lambda arg1: isinstance(arg1, type(None)) ), is_true_for=to_torch_tensor)
+def name_of_this_func_doesnt_matter(arg1):
     return torch.tensor([])
 
 
