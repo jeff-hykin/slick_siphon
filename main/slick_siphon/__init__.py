@@ -17,6 +17,13 @@ def siphon(*, when, is_true_for,):
         # force the module and name to match (allowing for double-siphoning the same function)
         level_1_wrapper.__module__ = parent_module_name
         level_1_wrapper.__name__ = name_of_child_function
+        
+        # copy over any attributes
+        for each_attr in dir(original_function):
+            try:
+                setattr(level_1_wrapper, each_attr, getattr(original_function, each_attr, None))
+            except:
+                pass
         # mutate the original value to be the level_1_wrapper value
         setattr(parent_module, name_of_child_function, level_1_wrapper)
         return level_1_wrapper
